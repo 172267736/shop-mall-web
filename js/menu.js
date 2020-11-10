@@ -1,9 +1,61 @@
+$(function () {
+    $("#jqGrid").jqGrid({
+        url: '/shop/admin/service/menu/list',
+        datatype: "json",
+        colModel: [         
+            {label: '菜单编号', name: 'uniqueId', visible: false, align: 'center', valign: 'middle', width: '80px'},
+            {label: '菜单名称', name: 'menuName', align: 'center', valign: 'middle', width: '180px'},
+            {label: '上级菜单', name: 'parentMenuName', align: 'center', valign: 'middle', width: '100px'},
+            {label: '图标', name: 'icon', align: 'center', valign: 'middle', width: '80px', formatter: function(value, options, row){
+                return value == null ? '' : '<i class="'+value+' fa-lg"></i>';
+            }},
+            {label: '类型', name: 'menuType', align: 'center', valign: 'middle', width: '100px',formatter: function(value, options, row){
+                if(value === 1){
+                    return '<span class="label label-primary">目录</span>';
+                }
+                if(value === 2){
+                    return '<span class="label label-success">菜单</span>';
+                }
+                if(value === 3){
+                    return '<span class="label label-warning">按钮</span>';
+                }
+            }},
+            {label: '排序号', name: 'sortNumber', align: 'center', valign: 'middle', width: '100px'},
+            {label: '菜单URL', name: 'menuUrl', align: 'center', valign: 'middle', width: '160px'}
+        ],
+        viewrecords: true,
+        height: 385,
+        rowNum: 10,
+        rowList : [10,30,50],
+        rownumbers: true, 
+        rownumWidth: 25, 
+        autowidth:true,
+        multiselect: true,
+        pager: "#jqGridPager",
+        jsonReader : {
+            root: "data.list",
+            total: "data.page",
+            records: "data.count"
+        },
+        prmNames : {
+            page:"page", 
+            rows:"limit", 
+        },
+        gridComplete:function(){
+            //隐藏grid底部滚动条
+            $("#jqGrid").closest(".ui-jqgrid-bdiv").css({ "overflow-x" : "hidden" }); 
+        }
+    });
+});
+
+var ztree;
+
 var setting = {
     data: {
         simpleData: {
             enable: true,
-            idKey: "menuId",
-            pIdKey: "parentId",
+            idKey: "uniqueId",
+            pIdKey: "parentUniqueId",
             rootPId: -1
         },
         key: {
@@ -11,64 +63,67 @@ var setting = {
         }
     }
 };
-var ztree;
 
 var vm = new Vue({
     el:'#rrapp',
     data:{
+        q:{
+            menuName:'',
+            menuType:null
+        },
         showList: true,
         title: null,
         menu:{
-            parentName:null,
-            parentId:0,
-            type:1,
-            orderNum:0
+            parentMenuName:null,
+            parentUniqueId:0,
+            menuType:1,
+            sortNumber:0
         }
     },
     methods: {
         getMenu: function(menuId){
             //加载菜单树
-            $.get(baseURL + "sys/menu/select", function(r){
-                ztree = $.fn.zTree.init($("#menuTree"), setting, r.menuList);
-                var node = ztree.getNodeByParam("menuId", vm.menu.parentId);
-                ztree.selectNode(node);
-
-                vm.menu.parentName = node.name;
+            $.get("shop/admin/service/menu/listAll", function(r){
+                ztree = $.fn.zTree.init($("#menuTree"), setting, r.data);
+                if(vm.menu.parentUniqueId!=0){
+                    var node = ztree.getNodeByParam("uniqueId",vm.menu.parentUniqueId);
+                    ztree.selectNode(node);
+                    vm.menu.parentMenuName = node.name;
+                }
             })
+        },
+        query: function () {
+            vm.reload();
         },
         add: function(){
             vm.showList = false;
             vm.title = "新增";
-            vm.menu = {parentName:null,parentId:0,type:1,orderNum:0};
+            vm.menu = {parentMenuName:null,parentUniqueId:0,menuType:1,sortNumber:0};
             vm.getMenu();
         },
         update: function () {
-            var menuId = getMenuId();
+            var menuId = getSelectedRowByKey("uniqueId");
             if(menuId == null){
                 return ;
             }
-
-            $.get(baseURL + "sys/menu/info/"+menuId, function(r){
+            $.get("shop/admin/service/menu/detail?id="+menuId, function(r){
                 vm.showList = false;
                 vm.title = "修改";
-                vm.menu = r.menu;
-
-                vm.getMenu();
+                vm.menu = r.data;
+                vm.getMenu(menuId);
             });
         },
         del: function () {
-            var menuId = getMenuId();
+            var menuId = getSelectedRowByKey("uniqueId");
             if(menuId == null){
                 return ;
             }
-
             confirm('确定要删除选中的记录？', function(){
                 $.ajax({
                     type: "POST",
-                    url: baseURL + "sys/menu/delete",
-                    data: "menuId=" + menuId,
+                    url: baseURL + "shop/admin/service/menu/delete?id="+menuId,
                     success: function(r){
-                        if(r.code === 0){
+                        if(r.code === '000000'){
                             alert('操作成功', function(){
                                 vm.reload();
                             });
@@ -80,18 +135,24 @@ var vm = new Vue({
             });
         },
         saveOrUpdate: function () {
-            if(vm.validator()){
-                return ;
+            if(isBlank(vm.menu.menuName)){
+                alert("菜单名称不能为空");
+                return true;
             }
 
-            var url = vm.menu.menuId == null ? "sys/menu/save" : "sys/menu/update";
+            //菜单
+            if(vm.menu.menuType === 2 && isBlank(vm.menu.menuUrl)){
+                alert("菜单URL不能为空");
+                return true;
+            }
+            var url = vm.menu.uniqueId == null ? "shop/admin/service/menu/save" : "shop/admin/service/menu/update";
             $.ajax({
                 type: "POST",
-                url:  baseURL + url,
+                url:  url,
                 contentType: "application/json",
                 data: JSON.stringify(vm.menu),
                 success: function(r){
-                    if(r.code === 0){
+                    if(r.code === '000000'){
                         alert('操作成功', function(){
                             vm.reload();
                         });
@@ -115,8 +176,8 @@ var vm = new Vue({
                 btn1: function (index) {
                     var node = ztree.getSelectedNodes();
                     //选择上级菜单
-                    vm.menu.parentId = node[0].menuId;
-                    vm.menu.parentName = node[0].name;
+                    vm.menu.parentUniqueId = node[0].uniqueId;
+                    vm.menu.parentMenuName = node[0].name;
 
                     layer.close(index);
                 }
@@ -124,79 +185,11 @@ var vm = new Vue({
         },
         reload: function () {
             vm.showList = true;
-            Menu.table.refresh();
-        },
-        validator: function () {
-            if(isBlank(vm.menu.name)){
-                alert("菜单名称不能为空");
-                return true;
-            }
-
-            //菜单
-            if(vm.menu.type === 1 && isBlank(vm.menu.url)){
-                alert("菜单URL不能为空");
-                return true;
-            }
+            var page = $("#jqGrid").jqGrid('getGridParam','page');
+            $("#jqGrid").jqGrid('setGridParam',{
+                postData:{'menuName': vm.q.menu,'menuType':vm.q.menuType},
+                page:page
+            }).trigger("reloadGrid");
         }
     }
-});
-
-
-var Menu = {
-    id: "menuTable",
-    table: null,
-    layerIndex: -1
-};
-
-/**
- * 初始化表格的列
- */
-Menu.initColumn = function () {
-    var columns = [
-        {field: 'selectItem', radio: true},
-        {title: '菜单ID', field: 'menuId', visible: false, align: 'center', valign: 'middle', width: '80px'},
-        {title: '菜单名称', field: 'name', align: 'center', valign: 'middle', sortable: true, width: '180px'},
-        {title: '上级菜单', field: 'parentName', align: 'center', valign: 'middle', sortable: true, width: '100px'},
-        {title: '图标', field: 'icon', align: 'center', valign: 'middle', sortable: true, width: '80px', formatter: function(item, index){
-            return item.icon == null ? '' : '<i class="'+item.icon+' fa-lg"></i>';
-        }},
-        {title: '类型', field: 'type', align: 'center', valign: 'middle', sortable: true, width: '100px', formatter: function(item, index){
-            if(item.type === 0){
-                return '<span class="label label-primary">目录</span>';
-            }
-            if(item.type === 1){
-                return '<span class="label label-success">菜单</span>';
-            }
-            if(item.type === 2){
-                return '<span class="label label-warning">按钮</span>';
-            }
-        }},
-        {title: '排序号', field: 'orderNum', align: 'center', valign: 'middle', sortable: true, width: '100px'},
-        {title: '菜单URL', field: 'url', align: 'center', valign: 'middle', sortable: true, width: '160px'},
-        {title: '授权标识', field: 'perms', align: 'center', valign: 'middle', sortable: true}]
-    return columns;
-};
-
-
-function getMenuId () {
-    var selected = $('#menuTable').bootstrapTreeTable('getSelections');
-    if (selected.length == 0) {
-        alert("请选择一条记录");
-        return null;
-    } else {
-        return selected[0].id;
-    }
-}
-
-
-$(function () {
-    var colunms = Menu.initColumn();
-    var table = new TreeTable(Menu.id, baseURL + "sys/menu/list", colunms);
-    table.setExpandColumn(2);
-    table.setIdField("menuId");
-    table.setCodeField("menuId");
-    table.setParentCodeField("parentId");
-    table.setExpandAll(false);
-    table.init();
-    Menu.table = table;
 });

@@ -41,7 +41,7 @@ Vue.component('menuItem',menuItem);
 var vm = new Vue({
 	el:'#rrapp',
 	data:{
-		uname:'',
+		userName:'',
 		menuList:{},
 		main:"main.html",
 		password:'',
@@ -50,7 +50,7 @@ var vm = new Vue({
 	},
 	methods: {
 		getMenuList: function (event) {
-			$.getJSON("service/menu/listByUser", function(r){
+			$.getJSON("/shop/admin/service/menu/listByUser", function(r){
 				if(r.code=="000000"){
 					vm.menuList = r.data;
 				}else if(r.code=="100002"){
@@ -68,10 +68,10 @@ var vm = new Vue({
 				content: jQuery("#passwordLayer"),
 				btn: ['修改','取消'],
 				btn1: function (index) {
-					var data = "password="+vm.password+"&newPassword="+vm.newPassword;
+					var data = "userName="+vm.userName+"&oldPwd="+vm.password+"&newPwd="+vm.newPassword;
 					$.ajax({
 						type: "POST",
-					    url: "sys/user/password",
+					    url: "/shop/admin/service/user/password/update",
 					    data: data,
 					    dataType: "json",
 					    success: function(result){
@@ -87,7 +87,7 @@ var vm = new Vue({
 					});
 	            }
 			});
-	},
+		},
     donate: function () {
 	        layer.open({
 	            type: 2,
@@ -100,6 +100,7 @@ var vm = new Vue({
     	}
 	},
 	created: function(){
+		this.userName = localStorage.getItem("userName");
 		this.getMenuList();
 	},
 	updated: function(){

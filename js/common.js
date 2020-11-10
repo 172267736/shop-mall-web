@@ -47,14 +47,13 @@ window.confirm = function(msg, callback){
 }
 
 //选择一条记录
-function getSelectedRow(grid) {
-    var rowKey = grid.getGridParam("selrow");
+function getSelectedRow() {
+    var rowKey = $("#jqGrid").getGridParam("selrow");
     if(!rowKey){
     	alert("请选择一条记录");
     	return ;
     }
-    
-    var selectedIDs = grid.getGridParam("selarrrow");
+    var selectedIDs = $("#jqGrid").getGridParam("selarrrow");
     if(selectedIDs.length > 1){
     	alert("只能选择一条记录");
     	return ;
@@ -64,19 +63,34 @@ function getSelectedRow(grid) {
 }
 
 //选择一条记录
-function getSelectedRowData(grid,rowId) {
-    return grid.jqGrid('getRowData',rowId);
+function getSelectedRowByKey(key) {
+    var rowKey = $("#jqGrid").getGridParam("selrow");
+    if(!rowKey){
+        alert("请选择一条记录");
+        return ;
+    }
+    var selectedIDs = $("#jqGrid").getGridParam("selarrrow");
+    if(selectedIDs.length > 1){
+        alert("只能选择一条记录");
+        return ;
+    }
+    return $("#jqGrid").jqGrid('getRowData',selectedIDs[0])[key];
+}
+
+
+//选择一条记录
+function getSelectedRowData(rowId) {
+    return $("#jqGrid").jqGrid('getRowData',rowId);
 }
 
 //选择多条记录
-function getSelectedRows(grip) {
-    var rowKey = grid.getGridParam("selrow");
+function getSelectedRows() {
+    var rowKey = $("#jqGrid").getGridParam("selrow");
     if(!rowKey){
     	alert("请选择一条记录");
     	return ;
     }
-    
-    return grid.getGridParam("selarrrow");
+    return $("#jqGrid").getGridParam("selarrrow");
 }
 
 //判断是否为空
@@ -94,3 +108,16 @@ function buildUrl(url, param) {
     }
     return url.substring(0, url.length - 1);
 }
+
+function timeFormat(timestamp) {
+    var date = new Date(timestamp);
+    var Y = date.getFullYear() + '-';
+    var M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) :         
+            date.getMonth() + 1) + '-';
+    var D = date.getDate() < 10 ? '0' + date.getDate() + ' ': 
+            date.getDate() + ' ';
+    var h = date.getHours() + ':';
+    var m = date.getMinutes() + ':';
+    var s = date.getSeconds();
+    return Y + M + D + h + m + s;
+}   
