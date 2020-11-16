@@ -47,22 +47,6 @@ window.confirm = function(msg, callback){
 }
 
 //选择一条记录
-function getSelectedRow() {
-    var rowKey = $("#jqGrid").getGridParam("selrow");
-    if(!rowKey){
-    	alert("请选择一条记录");
-    	return ;
-    }
-    var selectedIDs = $("#jqGrid").getGridParam("selarrrow");
-    if(selectedIDs.length > 1){
-    	alert("只能选择一条记录");
-    	return ;
-    }
-    
-    return selectedIDs[0];
-}
-
-//选择一条记录
 function getSelectedRowByKey(key) {
     var rowKey = $("#jqGrid").getGridParam("selrow");
     if(!rowKey){
@@ -77,25 +61,30 @@ function getSelectedRowByKey(key) {
     return $("#jqGrid").jqGrid('getRowData',selectedIDs[0])[key];
 }
 
-
-//选择一条记录
-function getSelectedRowData(rowId) {
-    return $("#jqGrid").jqGrid('getRowData',rowId);
-}
-
 //选择多条记录
-function getSelectedRows() {
+function getSelectedRowsByKey(key) {
     var rowKey = $("#jqGrid").getGridParam("selrow");
     if(!rowKey){
     	alert("请选择一条记录");
     	return ;
     }
-    return $("#jqGrid").getGridParam("selarrrow");
+    var result = [];
+    var selectedIDs = $("#jqGrid").getGridParam("selarrrow");
+    for(var i=0;i<selectedIDs.length;i++){
+        var keyV = $("#jqGrid").jqGrid('getRowData',selectedIDs[i])[key];
+        result.push(keyV);
+    }
+    return result;
 }
 
 //判断是否为空
 function isBlank(value) {
     return !value || !/\S/.test(value)
+}
+
+//判断是否为空
+function isEmpty(value) {
+    return value==null || value.length==0;
 }
 
 //构建url参数

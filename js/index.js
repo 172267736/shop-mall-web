@@ -44,8 +44,10 @@ var vm = new Vue({
 		userName:'',
 		menuList:{},
 		main:"main.html",
-		password:'',
-		newPassword:'',
+		update:{
+			password:'',
+			newPassword:''
+		},
         navTitle:"控制台"
 	},
 	methods: {
@@ -53,8 +55,20 @@ var vm = new Vue({
 			$.getJSON("/shop/admin/service/menu/listByUser", function(r){
 				if(r.code=="000000"){
 					vm.menuList = r.data;
-				}else if(r.code=="100002"){
-					parent.location.href = "login.html"
+				}else if(r.code == '100002'){
+                    location.href = "login.html";
+                }else{
+                    alert(r.msg);
+                }
+			});
+		},
+		loginOut: function(){
+			$.ajax({
+				type: "POST",
+				url: "shop/admin/service/user/loginOut",
+	   			contentType: "application/json",
+			    success: function(result){
+					location.href = "login.html";
 				}
 			});
 		},
@@ -68,21 +82,22 @@ var vm = new Vue({
 				content: jQuery("#passwordLayer"),
 				btn: ['修改','取消'],
 				btn1: function (index) {
-					var data = "userName="+vm.userName+"&oldPwd="+vm.password+"&newPwd="+vm.newPassword;
 					$.ajax({
 						type: "POST",
-					    url: "/shop/admin/service/user/password/update",
-					    data: data,
-					    dataType: "json",
-					    success: function(result){
-							if(result.code == "000000"){
+						url: "shop/admin/service/user/password/update",
+					    data: JSON.stringify(vm.update),
+			   			contentType: "application/json",
+					    success: function(r){
+							if(r.code == "000000"){
 								layer.close(index);
 								layer.alert('修改成功', function(index){
-									location.reload();
+									location.href = "login.html"
 								});
-							}else{
-								layer.alert(result.msg);
-							}
+							}else if(r.code == '100002'){
+			                    location.href = "login.html";
+			                }else{
+			                    layer.alert(r.msg);
+			                }
 						}
 					});
 	            }

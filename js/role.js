@@ -90,20 +90,24 @@ var vm = new Vue({
             vm.getMenuTree(roleId);
         },
         del: function () {
-            var roleId = getSelectedRowByKey("uniqueId");
-            if(roleId == null){
+            var ids = getSelectedRowsByKey("uniqueId");
+            if(ids == null){
                 return ;
             }
+             var data = {'ids':ids};
             confirm('确定要删除选中的记录？', function(){
                 $.ajax({
                     type: "POST",
-                    url: "shop/admin/service/role/delete?id="+roleId,
+                    url: "shop/admin/service/role/delete",
                     contentType: "application/json",
+                    data: JSON.stringify(data),
                     success: function(r){
                         if(r.code == 0){
                             alert('操作成功', function(){
                                 vm.reload();
                             });
+                        }else if(r.code == '100002'){
+                            location.href = "login.html";
                         }else{
                             alert(r.msg);
                         }
@@ -130,6 +134,11 @@ var vm = new Vue({
                 menuIdList.push(nodes[i].uniqueId);
             }
             vm.role.menuIdList = menuIdList;
+            if(vm.role.roleName==''||vm.role.roleName==null){
+                alert('角色名称不能为空');
+                return;
+            }
+            vm.role.menuIdList = menuIdList;
             var url = vm.role.uniqueId == null ? "shop/admin/service/role/save" : "shop/admin/service/role/update";
             $.ajax({
                 type: "POST",
@@ -141,6 +150,8 @@ var vm = new Vue({
                         alert('操作成功', function(){
                             vm.reload();
                         });
+                    }else if(r.code == '100002'){
+                        location.href = "login.html";
                     }else{
                         alert(r.msg);
                     }
@@ -150,12 +161,16 @@ var vm = new Vue({
         getMenuTree: function(roleId) {
             //加载菜单树
             $.get("shop/admin/service/menu/listAll", function(r){
-                menu_ztree = $.fn.zTree.init($("#menuTree"), menu_setting, r.data);
+                if(r.code === '000000'){
+                    menu_ztree = $.fn.zTree.init($("#menuTree"), menu_setting, r.data);
                 //展开所有节点
                 menu_ztree.expandAll(true);
-
                 if(roleId != null){
                     vm.getRole(roleId);
+                }else if(r.code == '100002'){
+                    location.href = "login.html";
+                }else{
+                    alert(r.msg);
                 }
             });
         },

@@ -84,12 +84,18 @@ var vm = new Vue({
         getMenu: function(menuId){
             //加载菜单树
             $.get("shop/admin/service/menu/listAll", function(r){
-                ztree = $.fn.zTree.init($("#menuTree"), setting, r.data);
-                if(vm.menu.parentUniqueId!=0){
-                    var node = ztree.getNodeByParam("uniqueId",vm.menu.parentUniqueId);
-                    ztree.selectNode(node);
-                    vm.menu.parentMenuName = node.name;
-                }
+                if(r.code = '000000'){
+                    ztree = $.fn.zTree.init($("#menuTree"), setting, r.data);
+                    if(vm.menu.parentUniqueId!=0){
+                        var node = ztree.getNodeByParam("uniqueId",vm.menu.parentUniqueId);
+                        ztree.selectNode(node);
+                        vm.menu.parentMenuName = node.name;
+                    }
+                }else if(r.code == '100002'){
+                    location.href = "login.html";
+                }else{
+                    alert(r.msg);
+                } 
             })
         },
         query: function () {
@@ -107,26 +113,37 @@ var vm = new Vue({
                 return ;
             }
             $.get("shop/admin/service/menu/detail?id="+menuId, function(r){
-                vm.showList = false;
-                vm.title = "修改";
-                vm.menu = r.data;
-                vm.getMenu(menuId);
+                if(r.code === '000000'){
+                    vm.showList = false;
+                    vm.title = "修改";
+                    vm.menu = r.data;
+                    vm.getMenu(menuId);
+                }else if(r.code == '100002'){
+                    location.href = "login.html";
+                }else{
+                    alert(r.msg);
+                }
             });
         },
         del: function () {
-            var menuId = getSelectedRowByKey("uniqueId");
-            if(menuId == null){
+            var ids = getSelectedRowsByKey("uniqueId");
+            if(ids == null){
                 return ;
             }
+            var data = {'ids':ids};
             confirm('确定要删除选中的记录？', function(){
                 $.ajax({
                     type: "POST",
-                    url: baseURL + "shop/admin/service/menu/delete?id="+menuId,
+                    url: "shop/admin/service/menu/delete",
+                    contentType: "application/json",
+                    data: JSON.stringify(data),
                     success: function(r){
                         if(r.code === '000000'){
                             alert('操作成功', function(){
                                 vm.reload();
                             });
+                        }else if(r.code == '100002'){
+                            location.href = "login.html";
                         }else{
                             alert(r.msg);
                         }
@@ -139,7 +156,6 @@ var vm = new Vue({
                 alert("菜单名称不能为空");
                 return true;
             }
-
             //菜单
             if(vm.menu.menuType === 2 && isBlank(vm.menu.menuUrl)){
                 alert("菜单URL不能为空");
@@ -156,13 +172,15 @@ var vm = new Vue({
                         alert('操作成功', function(){
                             vm.reload();
                         });
+                    }else if(r.code == '100002'){
+                        location.href = "login.html";
                     }else{
                         alert(r.msg);
                     }
                 }
             });
         },
-        menuTree: function(){
+        getMenuTree: function(){
             layer.open({
                 type: 1,
                 offset: '50px',

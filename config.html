@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>管理员列表</title>
+<title>字典配置</title>
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
@@ -24,7 +24,7 @@
 	<div v-show="showList">
 		<div class="grid-btn">
 			<div class="form-group col-sm-2">
-				<input type="text" class="form-control" v-model="q.userName" @keyup.enter="query" placeholder="用户名">
+				<input type="text" class="form-control" v-model="q.keyFlag" @keyup.enter="query" placeholder="键名">
 			</div>
 			<a class="btn btn-default" @click="query">查询</a>
 			<a class="btn btn-primary" @click="add"><i class="fa fa-plus"></i>&nbsp;新增</a>
@@ -39,33 +39,34 @@
 		<div class="panel-heading">{{title}}</div>
 		<form class="form-horizontal">
 			<div class="form-group">
-				<div class="col-sm-2 control-label">用户名</div>
+				<div class="col-sm-2 control-label">唯一键</div>
 				<div class="col-sm-10">
-					<input type="text" class="form-control" v-model="user.userName" placeholder="用户名"/>
+					<input type="text" class="form-control" v-model="config.keyFlag" placeholder="唯一键"/>
 				</div>
 			</div>
 			<div class="form-group">
-				<div class="col-sm-2 control-label">昵称</div>
+				<div class="col-sm-2 control-label">组名一</div>
 				<div class="col-sm-10">
-					<input type="text" class="form-control" v-model="user.nickName" placeholder="昵称"/>
+					<input type="text" class="form-control" v-model="config.firstName" placeholder="组名一"/>
 				</div>
 			</div>
 			<div class="form-group">
-				<div class="col-sm-2 control-label">角色</div>
+				<div class="col-sm-2 control-label">组名二</div>
 				<div class="col-sm-10">
-					<label v-for="role in roleList" class="checkbox-inline">
-						<input type="checkbox" :value="role.uniqueId" v-model="user.roleIdList">{{role.roleName}}
-					</label>
+					<input type="text" class="form-control" v-model="config.lastName" placeholder="组名二"/>
 				</div>
 			</div>
 			<div class="form-group">
-				<div class="col-sm-2 control-label">状态</div>
-				<label class="radio-inline">
-					<input type="radio" name="userState" value="0" v-model="user.userState"/> 正常
-				</label>
-				<label class="radio-inline">
-					<input type="radio" name="userState" value="1" v-model="user.userState"/> 禁用
-				</label>
+				<div class="col-sm-2 control-label">值</div>
+				<div class="col-sm-10">
+					<input type="text" class="form-control" v-model="config.storeValue" placeholder="值"/>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-2 control-label">说明</div>
+				<div class="col-sm-10">
+					<input type="textarea" class="form-control" v-model="config.keyDescription"/>
+				</div>
 			</div>
 			<div class="form-group">
 				<div class="col-sm-2 control-label"></div>
@@ -75,6 +76,6 @@
 		</form>
 	</div>
 </div>
-<script src="js/user.js"></script>
+<script src="js/config.js"></script>
 </body>
 </html>

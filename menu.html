@@ -31,7 +31,7 @@
 	<div v-show="showList">
 		<div class="grid-btn">
 			<div class="form-group col-sm-2">
-				<input type="text" class="form-control" v-model="q.menuName" @keyup.enter="query" placeholder="用户名">
+				<input type="text" class="form-control" v-model="q.menuName" @keyup.enter="query" placeholder="菜单名称">
 			</div>
 			<a class="btn btn-default" @click="query">查询</a>
 			<a class="btn btn-primary" @click="add"><i class="fa fa-plus"></i>&nbsp;新增</a>
@@ -66,7 +66,7 @@
 			<div class="form-group">
 				<div class="col-sm-2 control-label">上级菜单</div>
 				<div class="col-sm-10">
-					<input type="text" class="form-control" style="cursor:pointer;" v-model="menu.parentMenuName" @click="menuTree" readonly="readonly" placeholder="一级菜单"/>
+					<input type="text" class="form-control" style="cursor:pointer;" v-model="menu.parentMenuName" @click="getMenuTree" readonly="readonly" placeholder="一级菜单"/>
 				</div>
 			</div>
 			<div v-if="menu.menuType != 1" class="form-group">

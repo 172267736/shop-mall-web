@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>商品管理</title>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+<link rel="stylesheet" href="css/bootstrap.min.css">
+<link rel="stylesheet" href="css/font-awesome.min.css">
+<link rel="stylesheet" href="css/bootstrap-table.min.css">
+<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="plugins/jqgrid/ui.jqgrid-bootstrap.css">
+<link rel="stylesheet" href="plugins/ztree/css/metroStyle/metroStyle.css">
+<link rel="stylesheet" href="plugins/treegrid/jquery.treegrid.css">
+<script src="libs/jquery.min.js"></script>
+<script src="libs/bootstrap.min.js"></script>
+<script src="libs/vue.min.js"></script>
+<script src="libs/bootstrap-table.min.js"></script>
+<script src="plugins/jqgrid/grid.locale-cn.js"></script>
+<script src="plugins/jqgrid/jquery.jqGrid.min.js"></script>
+<script src="plugins/ztree/jquery.ztree.all.min.js"></script>
+<script src="plugins/layer/layer.js"></script>
+<script src="plugins/treegrid/tree.table.js"></script>
+<script src="plugins/treegrid/jquery.treegrid.min.js"></script>
+<script src="plugins/treegrid/jquery.treegrid.bootstrap3.js"></script>
+<script src="plugins/treegrid/jquery.treegrid.extension.js"></script>
+<script src="js/common.js"></script>
+</head>
+<body>
+<div id="rrapp" v-cloak>
+	<div v-show="showList">
+		<div class="grid-btn">
+			<div class="form-group col-sm-2">
+				<input type="text" class="form-control" v-model="q.goodsName" @keyup.enter="query" placeholder="商品名称">
+			</div>
+			<div class="form-group col-sm-1">
+				<input type="text" class="form-control" v-model="q.goodsTag" @keyup.enter="query" placeholder="标签">
+			</div>
+			<div class="form-group col-sm-1">
+				<select class="form-select" v-model="q.status">
+					<option :value="sta.id" v-for="sta in statusList">{{sta.name}}</option>
+				</select>
+			</div>
+			<a class="btn btn-default" @click="query">查询</a>
+			<a class="btn btn-primary" @click="add"><i class="fa fa-plus"></i>&nbsp;新增</a>
+			<a class="btn btn-primary" @click="update"><i class="fa fa-pencil-square-o"></i>&nbsp;修改</a>
+		</div>
+	    <table id="jqGrid"></table>
+	    <div id="jqGridPager"></div>
+    </div>
+
+	<div v-show="!showList" class="panel panel-default">
+		<div class="panel-heading">{{title}}</div>
+		<form class="form-horizontal" style="width:80%;">
+			<div class="form-group">
+				<div class="col-sm-1 control-label">名称</div>
+				<div class="col-sm-2">
+					<input type="text" class="form-control" v-model="goods.goodsName" placeholder="名称" disabled="false"/>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label">图片</div>
+				<div class="col-sm-6">
+					<div v-for="bigImg in goods.bigImgList" v-if="!isEmpty(goods.bigImgList)" class="form-img">
+						<img :src="bigImg"/>
+					</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label">品牌</div>
+				<div class="col-sm-2">
+					<input type="text" class="form-control" v-model="goods.goodsBrand" placeholder="品牌" disabled="true"/>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label">品牌LOGO</div>
+				<div class="col-sm-2">
+					<div class="form-img-circle" v-if="!isBlank(goods.goodsBrandLogo)">
+						<img :src="goods.goodsBrandLogo"/>
+					</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label">详情</div>
+				<div class="col-sm-2">
+					<input type="text" class="form-control" v-model="goods.goodsContent" placeholder="详情" disabled="true"/>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label">视频</div>
+				<div class="col-sm-2">
+					<video width="320" height="240" controls id="video" >
+				        <source :src="goods.goodsVideo" type="video/mp4" ref='video'>
+				    </video>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label">说明</div>
+				<div class="col-sm-2">
+					<input type="text" class="form-control" v-model="goods.goodsDescription" placeholder="说明" disabled="true"/>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label">所属分类</div>
+				<div class="col-sm-2">
+					<ul id="classifyTree" class="ztree" disabled="true"></ul>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label">标签</div>
+				<div class="col-sm-2" v-for="goodsTag in goods.goodsTagList">
+					<div class="form-tag">{{goodsTag}}</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label">序号</div>
+				<div class="col-sm-2">
+					<input type="text" class="form-control" v-model="goods.topSort" placeholder="序号" disabled="true"/>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label">原价(元)</div>
+				<div class="col-sm-2">
+					<input type="text" class="form-control" v-model="goods.originalPrice" placeholder="原价" disabled="true"/>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label">现价(元)</div>
+				<div class="col-sm-2">
+					<input type="text" class="form-control" v-model="goods.currentPrice" placeholder="现价"/>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label">商品属性</div>
+				<div class="col-sm-8">
+					<table id="goodsPropertyTable" data-mobile-responsive="true" data-click-to-select="true">
+						<thead>
+							<tr>
+								<th data-field="selectItem" data-checkbox="true"></th>
+							</tr>
+						</thead>
+					</table>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label">商品库存</div>
+				<div class="col-sm-8">
+					<table id="goodsSkuTable" data-mobile-responsive="true" data-click-to-select="true">
+						<thead>
+							<tr>
+								<th data-field="selectItem" data-checkbox="true"></th>
+							</tr>
+						</thead>
+					</table>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label">库存单位</div>
+				<div class="col-sm-2">
+					<input type="text" class="form-control" v-model="goods.stockUnit" placeholder="库存单位" disabled="true"/>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label">状态</div>
+				<div class="col-sm-2">
+					<label class="radio-inline" disabled="true">
+						<input type="radio" name="status" value="0" v-model="goods.status" disabled="true"/> 下架
+					</label>
+					<label class="radio-inline" disabled="true">
+						<input type="radio" name="status" value="1" v-model="goods.status" disabled="true"/> 上架
+					</label>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-1 control-label"></div>
+				<div class="col-sm-2">
+					<input type="button" class="btn btn-primary" @click="updatePrice" value="确定"/>
+					&nbsp;&nbsp;
+					<input type="button" class="btn btn-warning" @click="reload" value="返回"/>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
+<script src="js/goods.js"></script>
+</body>
+</html>
